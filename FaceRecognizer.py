@@ -5,6 +5,7 @@ import socket
 import time
 import pickle
 
+
 class FaceRecognizer():
     def __init__(self):
         self.known_face_encodings = []
@@ -19,10 +20,10 @@ class FaceRecognizer():
         self.face_locations = []
         self.face_encodings = []
         self.face_names = []
-        self.process_this_frame = True
 
         for i in range(5):
-            image = face_recognition.load_image_file("./PictureOfMe/"+str(i)+".jpg")
+            image = face_recognition.load_image_file(
+                "./PictureOfMe/"+str(i)+".jpg")
             face_encoding = face_recognition.face_encodings(image)[0]
             self.known_face_encodings.append(face_encoding)
             self.known_face_names.append(str(i))
@@ -34,31 +35,29 @@ class FaceRecognizer():
         # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
         rgb_small_frame = small_frame[:, :, ::-1]
 
-        # Only process every other frame of video to save time
-        if self.process_this_frame:
-            # Find all the faces and face encodings in the current frame of video
-            self.face_locations = face_recognition.face_locations(rgb_small_frame)
-            self.face_encodings = face_recognition.face_encodings(rgb_small_frame, self.face_locations)
+        # Find all the faces and face encodings in the current frame of video
+        self.face_locations = face_recognition.face_locations(rgb_small_frame)
+        self.face_encodings = face_recognition.face_encodings(
+            rgb_small_frame, self.face_locations)
 
-            for face_encoding in self.face_encodings:
-                # See if the face is a match for the known face(s)
-                matches = face_recognition.compare_faces(self.known_face_encodings, face_encoding)
-                name = "Unknown"
+        for face_encoding in self.face_encodings:
+            # See if the face is a match for the known face(s)
+            matches = face_recognition.compare_faces(
+                self.known_face_encodings, face_encoding)
+            name = "Unknown"
 
-                # # If a match was found in known_face_encodings, just use the first one.
-                # if True in matches:
-                #     first_match_index = matches.index(True)
-                #     name = known_face_names[first_match_index]
-                # Or instead, use the known face with the smallest distance to the new face
-                face_distances = face_recognition.face_distance(self.known_face_encodings, face_encoding)
-                best_match_index = np.argmin(face_distances)
-                if matches[best_match_index]:
-                    name = self.known_face_names[best_match_index]
+            # # If a match was found in known_face_encodings, just use the first one.
+            # if True in matches:
+            #     first_match_index = matches.index(True)
+            #     name = known_face_names[first_match_index]
+            # Or instead, use the known face with the smallest distance to the new face
+            face_distances = face_recognition.face_distance(
+                self.known_face_encodings, face_encoding)
+            best_match_index = np.argmin(face_distances)
+            if matches[best_match_index]:
+                name = self.known_face_names[best_match_index]
 
-                self.face_names.append(name)
-
-        self.process_this_frame = not self.process_this_frame
-
+            self.face_names.append(name)
 
         # Display the results
         for (top, right, bottom, left), name in zip(self.face_locations, self.face_names):
@@ -68,7 +67,7 @@ class FaceRecognizer():
             bottom *= 4
             left *= 4
 
-            centerposition = [int((left + right) / 2),int((top + bottom) / 2)]
+            centerposition = [int((left + right) / 2), int((top + bottom) / 2)]
             centerposition = pickle.dumps(centerposition)
             self.s.sendall(centerposition)
 
