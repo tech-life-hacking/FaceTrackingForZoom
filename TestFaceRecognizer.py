@@ -28,7 +28,7 @@ class FaceRecognizer():
             self.known_face_encodings.append(face_encoding)
             self.known_face_names.append(str(i))
 
-    def run(self, frame):
+    def run(self, frame, t, Time, X, Y):
         # Resize frame of video to 1/4 size for faster face recognition processing
         small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
 
@@ -62,17 +62,10 @@ class FaceRecognizer():
             bottom *= 4
             left *= 4
 
+            X.append(int((left + right) / 2))
+            Y.append(int((top + bottom) / 2))
+            Time.append(t)
+
             centerposition = [int((left + right) / 2), int((top + bottom) / 2)]
             centerposition = pickle.dumps(centerposition)
             self.s.sendall(centerposition)
-
-            # Draw a box around the face
-            #cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
-
-            # Draw a label with a name below the face
-            #cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
-            #font = cv2.FONT_HERSHEY_DUPLEX
-            #cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
-
-        # Display the resulting image
-        #cv2.imshow('Video', frame)
