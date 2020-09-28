@@ -10,6 +10,63 @@ def getNearestValue(list, num):
     return idx
 
 
+def plot(X, Y, offset, targetvalue, filename):
+    Y10percent = Y[getNearestValue(Y, max(Y)*0.1)]
+    Y90percent = Y[getNearestValue(Y, max(Y)*0.9)]
+    Y98percent = Y[getNearestValue(Y, max(Y)*0.98)]
+    X2percent = X[getNearestValue(Y, max(Y)*0.02)]
+    X10percent = X[getNearestValue(Y, max(Y)*0.1)]
+    X90percent = X[getNearestValue(Y, max(Y)*0.9)]
+    X98percent = X[getNearestValue(Y, max(Y)*0.98)]
+
+    plt.ylim(0, 400)
+    plt.xlabel('Times(s)')
+    plt.ylabel('pixels of frame')
+    plt.axhline(y=Y10percent, xmin=0, xmax=1)
+    plt.axhline(y=Y90percent, xmin=0, xmax=1)
+    plt.axhline(y=Y98percent, xmin=0, xmax=1)
+    plt.axvline(x=X2percent, ymin=0, ymax=1, c='orange')
+    plt.axvline(x=X10percent, ymin=0, ymax=1, c='gray')
+    plt.axvline(x=X90percent, ymin=0, ymax=1, c='gray')
+    plt.axvline(x=X98percent, ymin=0, ymax=1, c='orange')
+
+    point = {
+        'start': [X2percent, 300],
+        'end': [X98percent, 300]
+    }
+
+    plt.annotate('Settling Time '+str(round(X98percent - X2percent, 2))+' second', xy=point['start'], xytext=point['end'],
+                 arrowprops=dict(arrowstyle='<->',
+                                 facecolor='orange',
+                                 edgecolor='orange')
+                 )
+
+    point = {
+        'start': [X10percent, 350],
+        'end': [X90percent, 350]
+    }
+
+    plt.annotate('Rise Time '+str(round(X90percent - X10percent, 2))+' second', xy=point['start'], xytext=point['end'],
+                 arrowprops=dict(arrowstyle='<->',
+                                 facecolor='gray',
+                                 edgecolor='gray')
+                 )
+
+    point = {
+        'start': [3, targetvalue - offset],
+        'end': [3, 350]
+    }
+
+    plt.annotate('Target Value', xy=point['start'], xytext=point['end'],
+                 arrowprops=dict(arrowstyle='->',
+                                 facecolor='C0',
+                                 edgecolor='C0')
+                 )
+
+    plt.plot(X, Y, "blue")
+    plt.savefig(filename)
+
+
 if __name__ == '__main__':
 
     video_capture = cv2.VideoCapture(0)
@@ -27,8 +84,6 @@ if __name__ == '__main__':
         t += T - preT
         preT = T
 
-    plt.ylim(0, 400)
-
     tunedT = []
     for t in Time:
         tunedT.append(t - min(Time))
@@ -41,54 +96,10 @@ if __name__ == '__main__':
     for y in Y:
         tunedY.append(y - min(Y))
 
-    X10percent = tunedX[getNearestValue(tunedX, max(tunedX)*0.1)]
-    X90percent = tunedX[getNearestValue(tunedX, max(tunedX)*0.9)]
-    X98percent = tunedX[getNearestValue(tunedX, max(tunedX)*0.98)]
-    T1percent = tunedT[getNearestValue(tunedX, max(tunedX)*0.01)]
-    T10percent = tunedT[getNearestValue(tunedX, max(tunedX)*0.1)]
-    T90percent = tunedT[getNearestValue(tunedX, max(tunedX)*0.9)]
-    T98percent = tunedT[getNearestValue(tunedX, max(tunedX)*0.98)]
+    targetvalueX = video_capture.get(cv2.CAP_PROP_FRAME_WIDTH) / 2
+    targetvalueY = video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT) / 2
+    offsetX = min(X)
+    offsetY = min(Y)
 
-    plt.axhline(y=X10percent, xmin=0, xmax=1)
-    plt.axhline(y=X90percent, xmin=0, xmax=1)
-    plt.axhline(y=X98percent, xmin=0, xmax=1)
-    plt.axvline(x=T1percent, ymin=0, ymax=1, c='orange')
-    plt.axvline(x=T10percent, ymin=0, ymax=1, c='gray')
-    plt.axvline(x=T90percent, ymin=0, ymax=1, c='gray')
-    plt.axvline(x=T98percent, ymin=0, ymax=1, c='orange')
-
-    point = {
-        'start': [T1percent, 300],
-        'end': [T98percent, 300]
-    }
-
-    plt.annotate('Settling Time '+str(round(T98percent - T1percent, 2))+' second', xy=point['start'], xytext=point['end'],
-                 arrowprops=dict(arrowstyle='<->',
-                                 facecolor='orange',
-                                 edgecolor='orange')
-                 )
-
-    point = {
-        'start': [T10percent, 350],
-        'end': [T90percent, 350]
-    }
-
-    plt.annotate('Rise Time '+str(round(T90percent - T10percent, 2))+' second', xy=point['start'], xytext=point['end'],
-                 arrowprops=dict(arrowstyle='<->',
-                                 facecolor='gray',
-                                 edgecolor='gray')
-                 )
-
-    point = {
-        'start': [3, max(X) - min(X)],
-        'end': [3, 350]
-    }
-
-    plt.annotate('Target Value', xy=point['start'], xytext=point['end'],
-                 arrowprops=dict(arrowstyle='->',
-                                 facecolor='C0',
-                                 edgecolor='C0')
-                 )
-
-    plt.plot(tunedT, tunedX, "blue")
-    plt.savefig("a.png")
+    plot(tunedT, tunedX, offsetX, targetvalueX, 'StepResponseinXaxis.png')
+    #plot(tunedT, tunedY, offsetY, targetvalueY, 'StepResponseinYaxis.png')
